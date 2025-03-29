@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -e
+
+echo "🔧 Criar ambiente virtual em ~/env-cu113..."
+python3 -m venv ~/env-cu113
+source ~/env-cu113/bin/activate
+
+echo "⬆️ Atualizar pip e instalar PyTorch com suporte a CUDA 11.3..."
+pip install --upgrade pip
+pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 \
+  --extra-index-url https://download.pytorch.org/whl/cu113
+
+echo "🧠 Instalar TensorFlow 2.10 com NumPy compatível..."
+pip install "numpy<2.0"
+pip install tensorflow==2.10
+
+echo "📚 Instalar JupyterLab e bibliotecas úteis..."
+pip install jupyterlab ipykernel ipywidgets matplotlib pandas
+
+echo "🔗 Registar kernel no Jupyter..."
+python -m ipykernel install --user --name=env-cu113 --display-name "Python (cu113)"
+
+echo "🧪 Criar ficheiro de teste..."
+cat > test.py << 'EOF'
+import torch
+print("CUDA disponível:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("Nome da GPU:", torch.cuda.get_device_name(0))
+    print("Número de GPUs:", torch.cuda.device_count())
+    print("Versão do driver CUDA:", torch.version.cuda)
+    print("Versão do PyTorch:", torch.__version__)
+import tensorflow as tf
+print("TensorFlow version:", tf.__version__)
+print("GPU disponível:", tf.config.list_physical_devices('GPU'))
+EOF
+
+echo ""
+echo "✅ Ambiente configurado!"
+echo "👉 Ativa com: source ~/env-cu113/bin/activate"
+echo "👉 Corre o teste com: python test.py"
+echo "👉 Inicia o JupyterLab com: jupyter lab"
+
+
+python train.py --img 640 --batch 16 --epochs 50 --data capacete.yaml --weights yolov5s.pt --name capacete
+python detect.py --weights runs/train/exp/weights/best.pt --img 640 --source /home/djoker/code/cuda/capacete/images/train/Qual-a-funcao-do-capacete-de-protecao-1024x535-1.jpg
+python train.py --img 640 --batch 4 --epochs 100 --data data.yaml --weights yolov5s.pt
+python detect.py --weights runs/train/exp/weights/best.pt --img 640 --source video.mp4
+
+
+python detect.py --weights runs/train/yolo_portagem/weights/best.pt --/home/djoker/code/pyhon/udacity/portagens.mp4 --conf 0.4
+python train.py --img 640 --batch 4 --epochs 100 --data portagem.yaml --weights yolov5s.pt --name yolo_portagem
+python train.py --img 640 --batch 4 --epochs 100 --data portagem.yaml --weights yolov5s.pt --name portagem_yolo --cache
+
+/home/djoker/code/pyhon/udacity/portagens.mp4

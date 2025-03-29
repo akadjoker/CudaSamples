@@ -1,0 +1,9 @@
+numpy
+pandas
+Pillow
+matplotlib
+opencv-python-headless==4.5.5.62
+torch==1.10.0
+onnx
+onnxruntime==1.8.1
+
